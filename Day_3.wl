@@ -9,7 +9,7 @@
 
 
 SetDirectory@NotebookDirectory[];
-Clear@input; input = Characters /@ StringSplit[#, "\n"] &@(*Import@"Day_3_input.txt"*)"00100
+Clear@input; input = Characters /@ StringSplit[#, "\n"] &@Import@"Day_3_input.txt"(*"00100
 11110
 10110
 10111
@@ -20,7 +20,7 @@ Clear@input; input = Characters /@ StringSplit[#, "\n"] &@(*Import@"Day_3_input.
 10000
 11001
 00010
-01010" // ToExpression;
+01010"*) // ToExpression;
 
 
 (* ::Section:: *)
@@ -33,7 +33,7 @@ binaryToDecimal[bin : {{(0|1)..}..}] := bin.(2^Reverse@Range[0, Length@Transpose
 
 
 Clear@leastCommonest
-leastCommonest[list_List] := MinimalBy[Tally@list, #[[2]]&]
+leastCommonest[list_List] := MinimalBy[Tally@list, #[[2]]&][[;;, 1]]
 
 
 (* ::Subsection:: *)
@@ -54,38 +54,55 @@ Times@@binaryToDecimal@Values@minsAndMaxes
 
 
 (* ::Subsubsection:: *)
-(*Procedural Method (Doesn't work)*)
+(*Procedural Method*)
 
 
 Clear@echo
 echo[x_] := (Print[x]; x)
 
 
-binaryToDecimal@Block[
+oxygenRating = binaryToDecimal@Block[
 	{n = 0},
-	NestWhile[Function[binList, n++; Select[binList, #[[n]] == Commonest@binList[[;;, n]] &]], input, Length@# > 1 &, 1, Length@Transpose@input]
+	NestWhile[
+		Function[
+			binList,
+			n++; 
+			Select[
+				binList,
+				#[[n]] == If[
+					Length@Commonest@binList[[;;, n]] > 1,
+					1,
+					First@Commonest@binList[[;;, n]]
+				] &
+			]
+		],
+		input,
+		Length@# > 1 &,
+		1,
+		Length@Transpose@input
+	]
 ]
 
-
-(* ::Subsubsection::Closed:: *)
-(*List Method*)
-
-
-minsAndMaxes["maxes"]
-
-
-MemberQ[input, minsAndMaxes["maxes"]]
-oxygenRating = binaryToDecimal@minsAndMaxes["maxes"]
-
-
-CO2Rating = First@Block[
-	{n = 2},
-	While[
-		FreeQ[input[[;;, ;;-n]], minsAndMaxes["mins"][[;;-n]]],
-		n++
-	];
-	binaryToDecimal@Cases[input, Append[minsAndMaxes["mins"][[;;-n]], __]]
+carbonRating = binaryToDecimal@Block[
+	{n = 0},
+	NestWhile[
+		Function[
+			binList,
+			n++; 
+			Select[
+				binList,
+				#[[n]] == If[
+					Length@leastCommonest@binList[[;;, n]] > 1,
+					0,
+					First@leastCommonest@binList[[;;, n]]
+				] &
+			]
+		],
+		input,
+		Length@# > 1 &,
+		1,
+		Length@Transpose@input
+	]
 ]
 
-
-oxygenRating CO2Rating
+oxygenRating carbonRating
